@@ -80,9 +80,9 @@ export class E2BService {
             "version": "0.1.0",
             "private": true,
             "scripts": {
-              "dev": "next dev --hostname 0.0.0.0 --port 3000",
+              "dev": "next dev -H 0.0.0.0 -p 3000",
               "build": "next build", 
-              "start": "next start --hostname 0.0.0.0 --port 3000"
+              "start": "next start -H 0.0.0.0 -p 3000"
             },
             "dependencies": {
               "next": "^14.0.0",
