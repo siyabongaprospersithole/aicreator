@@ -130,30 +130,54 @@ Respond with JSON in this format:
       const structurePrompt = `
 Based on this analysis: ${JSON.stringify(analysisData)}
 
-Generate a complete Next.js project structure with TypeScript and Tailwind CSS.
-Include all necessary files for a production-ready application.
+Generate a complete Next.js project with BEAUTIFUL, MODERN design. This should be a visually stunning application that users would be excited to use.
 
-Respond with JSON array of files:
+CRITICAL DESIGN REQUIREMENTS:
+1. Use DIVERSE, VIBRANT color palettes - avoid generic grays and blues
+2. Include REAL, RELEVANT images from Unsplash (https://images.unsplash.com/)
+3. Create UNIQUE, custom styling for each project type
+4. Use modern design trends: gradients, shadows, animations, glassmorphism
+5. Make it look PROFESSIONAL and POLISHED, not like a template
+
+COLOR PALETTE EXAMPLES (choose ONE that fits the project):
+- Sunset: oranges, pinks, purples (#FF6B6B, #4ECDC4, #45B7D1)
+- Forest: greens, earth tones (#2ECC71, #27AE60, #F39C12)
+- Ocean: blues, teals, aqua (#3498DB, #2980B9, #1ABC9C)
+- Sunset: warm reds, yellows (#E74C3C, #F39C12, #F1C40F)
+- Purple Modern: purples, pinks (#9B59B6, #8E44AD, #E91E63)
+- Mint Fresh: mint, cyan, white (#16A085, #48C9B0, #A3E4D7)
+
+IMAGES TO USE (select appropriate for project type):
+- Task Management: productivity, workspace, organization images
+- E-commerce: product photography, shopping, lifestyle
+- Portfolio: creative work, design, professional
+- Blog: reading, writing, modern lifestyle
+- Landing Page: business, technology, success
+
+Respond with JSON array of files including:
 [
   {
-    "path": "package.json",
-    "content": "file content here",
+    "path": "app/page.tsx",
+    "content": "COMPLETE, BEAUTIFUL page with real images and modern styling",
+    "type": "file", 
+    "language": "typescript"
+  },
+  {
+    "path": "app/globals.css",
+    "content": "Custom CSS with chosen color palette and modern effects",
     "type": "file",
-    "language": "json"
+    "language": "css"
   }
 ]
 
-Requirements:
-- Use Next.js 14+ with App Router
-- TypeScript configuration
-- Tailwind CSS setup
-- Modern React patterns with hooks
-- Component-based architecture
-- Responsive design
-- Clean, production-ready code
-- Include README.md with setup instructions
-- Add appropriate dependencies in package.json
-- Include example pages and components based on the features
+MUST INCLUDE:
+- Beautiful hero sections with real Unsplash images
+- Modern UI components with animations
+- Responsive design for all devices
+- Custom color schemes (not generic blue/gray)
+- Proper typography and spacing
+- Interactive elements and hover effects
+- Professional-quality design that looks like a real product
 `;
 
       onProgress({
@@ -169,11 +193,31 @@ Requirements:
       try {
         const structureResponse = await this.client.chat.completions.create({
           messages: [
-            { role: "system", content: "You are an expert Next.js developer. Generate complete, production-ready code files with a focus on beautiful, modern UI, including relevant images and diverse color palettes. Return ONLY a valid JSON array with no markdown formatting or explanations. Each object should have: path, content, type, language fields." },
+            { 
+              role: "system", 
+              content: `You are a world-class UI/UX designer and expert Next.js developer. Your mission is to create STUNNING, UNIQUE websites that look like they were designed by top agencies.
+
+DESIGN PRINCIPLES:
+- Every website should have a distinct visual identity
+- Use bold, vibrant colors that create emotional impact
+- Include high-quality, relevant images from Unsplash
+- Create layouts that are both beautiful AND functional
+- Add subtle animations and modern effects
+- Make it look like a premium, professional product
+
+AVOID AT ALL COSTS:
+- Generic blue/gray color schemes
+- Placeholder text or images
+- Template-looking designs
+- Boring, corporate styling
+- Default Tailwind colors without customization
+
+Return ONLY a valid JSON array with complete, production-ready files. Each file should showcase exceptional design quality.` 
+            },
             { role: "user", content: structurePrompt }
           ],
-          max_tokens: 8192,
-          temperature: 0.7, // Increased temperature for more creativity
+          max_tokens: 12000, // Increased for more detailed responses
+          temperature: 0.8, // Higher creativity
           model: modelName
         });
 
@@ -265,7 +309,9 @@ Requirements:
             "lucide-react": "^0.294.0",
             "@headlessui/react": "^1.7.17",
             "clsx": "^2.0.0",
-            "next-themes": "^0.2.1"
+            "next-themes": "^0.2.1",
+            "react-beautiful-dnd": "^13.1.1",
+            "zustand": "^4.4.7"
           }
         }, null, 2),
         type: "file",
@@ -325,60 +371,115 @@ body {
 import Image from 'next/image';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { ArrowRight, Star, Users, Zap } from 'lucide-react';
+import { ArrowRight, CheckCircle, Sparkles, Target, Users, Zap } from 'lucide-react';
+import TaskBoard from '@/components/TaskBoard';
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-indigo-50">
+    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50">
+      {/* Navigation */}
+      <nav className="relative z-10 px-6 py-4">
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <div className="w-8 h-8 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-lg flex items-center justify-center">
+              <Target className="w-5 h-5 text-white" />
+            </div>
+            <span className="text-xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
+              ${projectName}
+            </span>
+          </div>
+          <div className="hidden md:flex items-center space-x-8">
+            <Link href="#features" className="text-gray-600 hover:text-emerald-600 transition-colors">Features</Link>
+            <Link href="#pricing" className="text-gray-600 hover:text-emerald-600 transition-colors">Pricing</Link>
+            <Link href="#contact" className="text-gray-600 hover:text-emerald-600 transition-colors">Contact</Link>
+            <Link href="/dashboard" className="bg-gradient-to-r from-emerald-500 to-teal-500 text-white px-6 py-2 rounded-lg hover:shadow-lg transition-all">
+              Get Started
+            </Link>
+          </div>
+        </div>
+      </nav>
+
       {/* Hero Section */}
-      <section className="relative py-20 px-4 sm:px-6 lg:px-8">
+      <section className="relative px-6 py-20">
         <div className="max-w-7xl mx-auto">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
+          <div className="grid lg:grid-cols-2 gap-16 items-center">
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
+              initial={{ opacity: 0, x: -50 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.8 }}
             >
-              <h1 className="text-4xl md:text-6xl font-bold text-gray-900 leading-tight">
-                Welcome to{' '}
-                <span className="bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-                  ${projectName}
+              <div className="inline-flex items-center px-4 py-2 bg-emerald-100 rounded-full mb-6">
+                <Sparkles className="w-4 h-4 text-emerald-600 mr-2" />
+                <span className="text-emerald-700 text-sm font-medium">Productivity Reimagined</span>
+              </div>
+              <h1 className="text-5xl md:text-7xl font-extrabold text-gray-900 leading-tight mb-6">
+                Organize Your
+                <span className="block bg-gradient-to-r from-emerald-500 to-teal-500 bg-clip-text text-transparent">
+                  Digital Life
                 </span>
               </h1>
-              <p className="text-xl text-gray-600 mt-6 leading-relaxed">
-                Experience the future of task management with our intuitive, 
-                powerful platform designed to boost your productivity.
+              <p className="text-xl text-gray-600 mb-8 leading-relaxed">
+                Transform chaos into clarity with our intelligent task management platform. 
+                Built for modern teams who demand beautiful design and powerful functionality.
               </p>
-              <div className="mt-8 flex flex-col sm:flex-row gap-4">
+              <div className="flex flex-col sm:flex-row gap-4 mb-8">
                 <Link
                   href="/dashboard"
-                  className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 py-4 rounded-lg font-semibold hover:shadow-lg transition-all duration-300 flex items-center justify-center group"
+                  className="bg-gradient-to-r from-emerald-500 to-teal-500 text-white px-8 py-4 rounded-xl font-semibold hover:shadow-xl transition-all duration-300 flex items-center justify-center group"
                 >
-                  Get Started
+                  Start Building
                   <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </Link>
                 <Link
-                  href="/features"
-                  className="border-2 border-purple-600 text-purple-600 px-8 py-4 rounded-lg font-semibold hover:bg-purple-50 transition-all duration-300"
+                  href="#demo"
+                  className="border-2 border-emerald-500 text-emerald-600 px-8 py-4 rounded-xl font-semibold hover:bg-emerald-50 transition-all duration-300"
                 >
-                  Learn More
+                  View Demo
                 </Link>
               </div>
+              <div className="flex items-center space-x-6 text-sm text-gray-500">
+                <div className="flex items-center">
+                  <CheckCircle className="w-4 h-4 text-emerald-500 mr-2" />
+                  Free 14-day trial
+                </div>
+                <div className="flex items-center">
+                  <CheckCircle className="w-4 h-4 text-emerald-500 mr-2" />
+                  No credit card required
+                </div>
+              </div>
             </motion.div>
+            
             <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
+              initial={{ opacity: 0, x: 50 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.8, delay: 0.2 }}
               className="relative"
             >
-              <div className="relative w-full h-96 rounded-2xl overflow-hidden shadow-2xl">
-                <Image
-                  src="https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=800&h=600&fit=crop&crop=center"
-                  alt="Task Management Dashboard"
-                  fill
-                  className="object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-purple-900/20 to-transparent" />
+              <div className="relative">
+                <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/20 to-teal-500/20 rounded-3xl blur-3xl"></div>
+                <div className="relative bg-white/80 backdrop-blur-sm rounded-3xl p-8 shadow-2xl border border-white/20">
+                  <div className="w-full h-80 rounded-2xl overflow-hidden mb-6">
+                    <Image
+                      src="https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=600&h=400&fit=crop&crop=center"
+                      alt="Modern workspace with task management"
+                      width={600}
+                      height={400}
+                      className="object-cover w-full h-full"
+                    />
+                  </div>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-3 h-3 bg-emerald-500 rounded-full"></div>
+                        <span className="text-gray-700 font-medium">Project Alpha</span>
+                      </div>
+                      <span className="text-xs bg-emerald-100 text-emerald-700 px-2 py-1 rounded-full">In Progress</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div className="bg-gradient-to-r from-emerald-500 to-teal-500 h-2 rounded-full w-3/4"></div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </motion.div>
           </div>
@@ -386,81 +487,136 @@ export default function Home() {
       </section>
 
       {/* Features Section */}
-      <section className="py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              Why Choose ${projectName}?
+      <section id="features" className="py-24 bg-white">
+        <div className="max-w-7xl mx-auto px-6">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-20"
+          >
+            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
+              Everything You Need to
+              <span className="block bg-gradient-to-r from-emerald-500 to-teal-500 bg-clip-text text-transparent">
+                Stay Organized
+              </span>
             </h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Discover the features that make us the preferred choice for teams worldwide.
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              Powerful features designed to streamline your workflow and boost team productivity.
             </p>
-          </div>
+          </motion.div>
 
           <div className="grid md:grid-cols-3 gap-8">
             {[
               {
                 icon: <Zap className="w-8 h-8" />,
                 title: "Lightning Fast",
-                description: "Built for speed with modern technologies and optimized performance.",
+                description: "Built for speed with real-time updates and instant sync across all devices.",
+                image: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&h=300&fit=crop",
                 color: "from-yellow-400 to-orange-500"
               },
               {
                 icon: <Users className="w-8 h-8" />,
                 title: "Team Collaboration", 
-                description: "Work together seamlessly with real-time updates and sharing.",
+                description: "Work together seamlessly with shared workspaces and real-time collaboration.",
+                image: "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=400&h=300&fit=crop",
                 color: "from-blue-400 to-purple-500"
               },
               {
-                icon: <Star className="w-8 h-8" />,
-                title: "Premium Experience",
-                description: "Enjoy a polished, intuitive interface designed for productivity.",
-                color: "from-pink-400 to-red-500"
+                icon: <Target className="w-8 h-8" />,
+                title: "Smart Organization",
+                description: "AI-powered task organization that learns from your workflow patterns.",
+                image: "https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?w=400&h=300&fit=crop",
+                color: "from-emerald-400 to-teal-500"
               }
             ].map((feature, index) => (
               <motion.div
                 key={index}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: index * 0.1 }}
-                className="bg-white rounded-xl p-8 shadow-lg hover:shadow-xl transition-shadow duration-300 border border-gray-100"
+                className="group"
               >
-                <div className={\`w-16 h-16 bg-gradient-to-r \${feature.color} rounded-lg flex items-center justify-center text-white mb-6\`}>
-                  {feature.icon}
+                <div className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all duration-500 border border-gray-100 overflow-hidden relative">
+                  <div className="relative mb-6">
+                    <Image
+                      src={feature.image}
+                      alt={feature.title}
+                      width={400}
+                      height={200}
+                      className="w-full h-48 object-cover rounded-xl"
+                    />
+                    <div className={\`absolute top-4 left-4 w-12 h-12 bg-gradient-to-r \${feature.color} rounded-xl flex items-center justify-center text-white shadow-lg\`}>
+                      {feature.icon}
+                    </div>
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-3">
+                    {feature.title}
+                  </h3>
+                  <p className="text-gray-600 leading-relaxed">
+                    {feature.description}
+                  </p>
                 </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-4">
-                  {feature.title}
-                </h3>
-                <p className="text-gray-600 leading-relaxed">
-                  {feature.description}
-                </p>
               </motion.div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="py-20 bg-gradient-to-r from-purple-600 to-pink-600">
-        <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
+      {/* Interactive Demo Section */}
+      <section id="demo" className="py-24 bg-gradient-to-br from-gray-50 to-gray-100">
+        <div className="max-w-7xl mx-auto px-6">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-16"
+          >
+            <h2 className="text-4xl font-bold text-gray-900 mb-6">
+              See ${projectName} in Action
+            </h2>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+              Try our interactive demo and experience the power of modern task management.
+            </p>
+          </motion.div>
+          
+          <div className="bg-white rounded-3xl shadow-2xl p-8 border border-gray-200">
+            <TaskBoard />
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-24 bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 relative overflow-hidden">
+        <div className="absolute inset-0 bg-black/10"></div>
+        <div className="relative max-w-4xl mx-auto text-center px-6">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
           >
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
-              Ready to Transform Your Workflow?
+            <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
+              Ready to Transform Your
+              <span className="block">Productivity?</span>
             </h2>
-            <p className="text-xl text-purple-100 mb-8">
-              Join thousands of teams already using ${projectName} to achieve more.
+            <p className="text-xl text-emerald-100 mb-8 max-w-2xl mx-auto">
+              Join thousands of teams already using ${projectName} to organize their work and achieve their goals faster.
             </p>
-            <Link
-              href="/signup"
-              className="bg-white text-purple-600 px-8 py-4 rounded-lg font-semibold hover:bg-gray-50 transition-colors duration-300 inline-flex items-center"
-            >
-              Start Free Trial
-              <ArrowRight className="ml-2 w-5 h-5" />
-            </Link>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link
+                href="/signup"
+                className="bg-white text-emerald-600 px-8 py-4 rounded-xl font-semibold hover:bg-gray-50 transition-all duration-300 inline-flex items-center justify-center shadow-lg"
+              >
+                Start Your Free Trial
+                <ArrowRight className="ml-2 w-5 h-5" />
+              </Link>
+              <Link
+                href="/contact"
+                className="border-2 border-white text-white px-8 py-4 rounded-xl font-semibold hover:bg-white/10 transition-all duration-300"
+              >
+                Talk to Sales
+              </Link>
+            </div>
           </motion.div>
         </div>
       </section>
