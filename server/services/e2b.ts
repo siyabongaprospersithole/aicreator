@@ -74,7 +74,7 @@ export class E2BService {
 
       // Start the development server
       console.log('Starting development server...');
-      const startCommand = hasPackageJson ? 'npm run dev' : 'npx serve -s . -p 3000';
+      const startCommand = hasPackageJson ? 'npm run dev' : 'npx serve -s . -p 3000 -H 0.0.0.0';
 
       // Start server in background
       sandbox.commands.run(startCommand).catch(error => {
