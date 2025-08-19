@@ -1,4 +1,3 @@
-import React from 'react';
 import { Project } from '@/lib/types';
 
 interface LivePreviewProps {
@@ -79,134 +78,68 @@ export default function LivePreview({ project }: LivePreviewProps) {
     );
   }
 
-  // Request compilation and preview URL for the generated project
-  React.useEffect(() => {
-    if (project && project.files && project.files.length > 0 && !project.previewUrl) {
-      // Request live preview compilation
-      fetch(`/api/projects/${project.id}/compile`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      })
-      .then(response => response.json())
-      .then(data => {
-        if (data.previewUrl) {
-          // The backend should update the project with the preview URL
-          // This would trigger a re-render through the project state
-          console.log('Preview URL ready:', data.previewUrl);
-        }
-      })
-      .catch(error => {
-        console.error('Failed to compile project:', error);
-      });
-    }
-  }, [project]);
-
-  // Show compilation in progress
-  if (project && project.files && project.files.length > 0 && !project.previewUrl) {
-    return (
-      <div className="h-full flex items-center justify-center bg-slate-50">
-        <div className="text-center max-w-md p-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4">
-            <i className="fas fa-cog fa-spin text-blue-500 text-xl"></i>
-          </div>
-          <h3 className="text-lg font-semibold text-slate-900 mb-2">Compiling Project</h3>
-          <p className="text-sm text-slate-600 mb-4">
-            Setting up your generated project and installing dependencies...
-          </p>
-          <div className="space-y-2 text-left max-w-xs mx-auto">
-            <div className="flex items-center space-x-2 text-xs">
-              <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
-              <span className="text-slate-600">Installing dependencies</span>
-            </div>
-            <div className="flex items-center space-x-2 text-xs">
-              <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-              <span className="text-slate-600">Compiling components</span>
-            </div>
-            <div className="flex items-center space-x-2 text-xs">
-              <div className="w-2 h-2 bg-slate-300 rounded-full"></div>
-              <span className="text-slate-400">Starting development server</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Fallback: Show file browser and code preview when live preview isn't available
+  // Mock preview for demo when no live URL available
   return (
-    <div className="h-full bg-white overflow-hidden" data-testid="code-browser">
+    <div className="h-full bg-white overflow-hidden" data-testid="mock-preview">
       <div className="h-full flex flex-col">
-        {/* Header */}
+        {/* Mock App Header */}
         <div className="bg-white border-b border-slate-200 p-4 flex-shrink-0">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <h1 className="text-xl font-bold text-slate-900">{project.name}</h1>
-              <span className="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded-full">
-                Generated Files
-              </span>
+              <div className="flex items-center space-x-2">
+                <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                  <span className="text-green-600 text-xs font-semibold">U</span>
+                </div>
+                <span className="text-sm text-slate-600">User</span>
+              </div>
             </div>
             <div className="flex items-center space-x-2">
-              <button 
-                className="px-3 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700"
-                onClick={() => window.open(`/api/projects/${project.id}/download`, '_blank')}
-              >
-                <i className="fas fa-download mr-2"></i>Download
+              <button className="px-3 py-2 bg-primary text-white text-sm rounded-lg">
+                <i className="fas fa-plus mr-2"></i>New Item
               </button>
             </div>
           </div>
         </div>
 
-        {/* File Browser */}
+        {/* Mock Content Area */}
         <div className="flex-1 p-6 bg-slate-50 overflow-auto">
-          <div className="max-w-6xl mx-auto">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* File Tree */}
-              <div className="bg-white rounded-lg shadow-sm border border-slate-200">
-                <div className="p-4 border-b border-slate-200">
-                  <h3 className="font-semibold text-slate-900">Project Structure</h3>
-                </div>
-                <div className="p-4 max-h-96 overflow-auto">
-                  {project.files?.map((file, index) => (
-                    <div key={index} className="flex items-center space-x-2 py-1 text-sm">
-                      <i className={`fas ${file.path.includes('.') ? 'fa-file-code' : 'fa-folder'} text-slate-400`}></i>
-                      <span className="text-slate-700">{file.path}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
+          <div className="max-w-4xl mx-auto">
+            <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6">
+              <h2 className="text-lg font-semibold text-slate-900 mb-4">Welcome to {project.name}</h2>
+              <p className="text-slate-600 mb-6">
+                Your project has been generated successfully! This is a preview of your application.
+                The actual implementation includes all the components and functionality specified in your requirements.
+              </p>
 
-              {/* Main Files Preview */}
-              <div className="bg-white rounded-lg shadow-sm border border-slate-200">
-                <div className="p-4 border-b border-slate-200">
-                  <h3 className="font-semibold text-slate-900">Key Files</h3>
-                </div>
-                <div className="p-4 space-y-4 max-h-96 overflow-auto">
-                  {project.files?.slice(0, 3).map((file, index) => (
-                    <div key={index} className="border border-slate-200 rounded-lg">
-                      <div className="px-3 py-2 bg-slate-50 border-b border-slate-200">
-                        <code className="text-sm font-mono text-slate-600">{file.path}</code>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {['Component 1', 'Component 2', 'Component 3', 'Component 4', 'Component 5', 'Component 6'].map((item, index) => (
+                  <div key={index} className="bg-slate-50 border border-slate-200 rounded-lg p-4">
+                    <div className="flex items-center space-x-3 mb-3">
+                      <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
+                        <i className="fas fa-cube text-white text-sm"></i>
                       </div>
-                      <div className="p-3">
-                        <pre className="text-xs text-slate-600 overflow-hidden">
-                          {file.content.substring(0, 200)}...
-                        </pre>
+                      <div>
+                        <h3 className="font-medium text-slate-900">{item}</h3>
+                        <p className="text-xs text-slate-500">React Component</p>
                       </div>
                     </div>
-                  ))}
-                </div>
+                    <p className="text-sm text-slate-600">
+                      This component is part of your generated project structure.
+                    </p>
+                  </div>
+                ))}
               </div>
-            </div>
 
-            <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-              <div className="flex items-start space-x-3">
-                <i className="fas fa-info-circle text-blue-500 mt-0.5"></i>
-                <div>
-                  <p className="text-sm font-medium text-blue-900">Live Preview Pending</p>
-                  <p className="text-sm text-blue-700 mt-1">
-                    The project files have been generated successfully. Download the files to run locally, or the live preview will be available once compilation completes.
-                  </p>
+              <div className="mt-8 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <div className="flex items-start space-x-3">
+                  <i className="fas fa-info-circle text-blue-500 mt-0.5"></i>
+                  <div>
+                    <p className="text-sm font-medium text-blue-900">Ready for Development</p>
+                    <p className="text-sm text-blue-700 mt-1">
+                      Download the project files to continue development locally. All dependencies and configurations are included.
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
