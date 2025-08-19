@@ -12,7 +12,7 @@ export default function LivePreview({ project }: LivePreviewProps) {
           <i className="fas fa-rocket text-4xl mb-4"></i>
           <h3 className="text-lg font-medium mb-2">No Project Selected</h3>
           <p className="text-sm">
-            Start a conversation with the AI to generate your first Next.js project. 
+            Start a conversation with the AI to generate your first Next.js project.
             Describe what you want to build and watch the magic happen!
           </p>
         </div>
@@ -66,13 +66,30 @@ export default function LivePreview({ project }: LivePreviewProps) {
     );
   }
 
-  if (project.previewUrl) {
+  if (project.status === "ready" && project.previewUrl) {
     return (
-      <div className="h-full" data-testid="live-preview">
+      <div className="h-full bg-white flex flex-col" data-testid="live-preview">
+        <div className="flex-shrink-0 bg-slate-100 border-b border-slate-200 px-4 py-2 flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+            <span className="text-sm text-slate-600">Live Preview</span>
+            <code className="text-xs bg-slate-200 px-2 py-1 rounded text-slate-700">
+              {project.previewUrl}
+            </code>
+          </div>
+          <button
+            className="text-xs bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 transition-colors"
+            onClick={() => window.open(project.previewUrl, '_blank')}
+          >
+            Open in New Tab
+          </button>
+        </div>
         <iframe
           src={project.previewUrl}
-          className="w-full h-full border-0"
-          title={`Preview of ${project.name}`}
+          className="flex-1 w-full border-0"
+          title={`${project.name} Preview`}
+          sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals allow-top-navigation"
+          onLoad={() => console.log("Preview loaded")}
         />
       </div>
     );

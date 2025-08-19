@@ -57,16 +57,39 @@ export class E2BService {
 
   async deployProject(sessionId: string, files: Array<{ path: string; content: string }>): Promise<string> {
     try {
-      // In a real implementation, this would:
-      // 1. Upload files to the E2B session
-      // 2. Install dependencies (npm install)
-      // 3. Start the development server
-      // 4. Return the preview URL
-      
       console.log(`Deploying project to E2B session: ${sessionId}`);
       console.log(`Files to deploy: ${files.map(f => f.path).join(", ")}`);
 
-      // Mock deployment - return a placeholder URL
+      if (!this.apiKey) {
+        // Return mock URL for development when E2B is not configured
+        return `https://${sessionId}.e2b.dev`;
+      }
+
+      // Upload files to E2B session
+      for (const file of files) {
+        await this.uploadFile(sessionId, file.path, file.content);
+      }
+
+      // Install dependencies if package.json exists
+      const hasPackageJson = files.some(f => f.path === 'package.json');
+      if (hasPackageJson) {
+        console.log('Installing dependencies...');
+        await this.executeCommand(sessionId, 'npm install');
+      }
+
+      // Start the development server
+      console.log('Starting development server...');
+      const startCommand = hasPackageJson ? 'npm run dev' : 'npx serve -s . -p 3000';
+      
+      // Start server in background
+      this.executeCommand(sessionId, startCommand).catch(error => {
+        console.log('Server start command completed or errored:', error.message);
+      });
+
+      // Wait a moment for server to start
+      await new Promise(resolve => setTimeout(resolve, 3000));
+
+      // Return the preview URL
       return `https://${sessionId}.e2b.dev`;
     } catch (error) {
       console.error("E2B deployment error:", error);
@@ -74,15 +97,63 @@ export class E2BService {
     }
   }
 
+  async uploadFile(sessionId: string, filePath: string, content: string): Promise<void> {
+    try {
+      const response = await fetch(`${this.baseUrl}/sessions/${sessionId}/filesystem/write`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${this.apiKey}`,
+        },
+        body: JSON.stringify({
+          path: filePath,
+          content: content
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to upload file ${filePath}: ${response.statusText}`);
+      }
+    } catch (error) {
+      console.error(`File upload error for ${filePath}:`, error);
+      throw error;
+    }
+  }
+
   async executeCommand(sessionId: string, command: string): Promise<{ stdout: string; stderr: string; exitCode: number }> {
     try {
       console.log(`Executing command in session ${sessionId}: ${command}`);
       
-      // Mock command execution
+      if (!this.apiKey) {
+        // Mock command execution for development
+        return {
+          stdout: `Command executed: ${command}`,
+          stderr: "",
+          exitCode: 0
+        };
+      }
+
+      const response = await fetch(`${this.baseUrl}/sessions/${sessionId}/processes`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${this.apiKey}`,
+        },
+        body: JSON.stringify({
+          command: command,
+          background: command.includes('npm run dev') || command.includes('serve')
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`E2B API error: ${response.status} ${response.statusText}`);
+      }
+
+      const result = await response.json();
       return {
-        stdout: `Command executed: ${command}`,
-        stderr: "",
-        exitCode: 0
+        stdout: result.stdout || "",
+        stderr: result.stderr || "",
+        exitCode: result.exitCode || 0
       };
     } catch (error) {
       console.error("E2B command execution error:", error);

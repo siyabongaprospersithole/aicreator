@@ -4,6 +4,7 @@ import { WebSocketServer, WebSocket } from "ws";
 import { storage } from "./storage";
 import { generateProject } from "./services/ai";
 import { scrapeReference } from "./services/firecrawl";
+import { e2bService } from "./services/e2b";
 import { insertProjectSchema, insertMessageSchema } from "@shared/schema";
 import archiver from "archiver";
 import path from "path";
@@ -234,10 +235,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       });
 
-      // Update project with generated files
+      // Deploy to E2B for live preview
+      let previewUrl = null;
+      try {
+        broadcast(projectId, {
+          type: "generation_progress",
+          progress: 90,
+          step: "deploying",
+          message: "Deploying to live environment..."
+        });
+
+        const session = await e2bService.createSession();
+        previewUrl = await e2bService.deployProject(session.id, result.files);
+        
+        broadcast(projectId, {
+          type: "generation_progress",
+          progress: 95,
+          step: "deploying",
+          message: "Live preview ready!"
+        });
+      } catch (error) {
+        console.error("E2B deployment error:", error);
+        // Continue without live preview
+      }
+
+      // Update project with generated files and preview URL
       await storage.updateProject(projectId, {
         status: "ready",
-        files: result.files
+        files: result.files,
+        previewUrl
       });
 
       // Create final assistant message
