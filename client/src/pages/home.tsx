@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import ChatSidebar from '@/components/chat/chat-sidebar';
 import CodePreview from '@/components/preview/code-preview';
 import { Button } from '@/components/ui/button';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { Project } from '@/lib/types';
 import { useWebSocket } from '@/hooks/use-websocket';
 
