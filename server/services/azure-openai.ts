@@ -162,20 +162,18 @@ Requirements:
         message: "Writing code for components and pages..."
       });
 
-      // Skip the complex AI generation for now and use the task management template
-      console.log("Using task management template files");
-      let generatedProjectFiles: ProjectFile[] = projectFiles;
+      // Try to enhance with AI and apply modern styling and image fetching
+      console.log("Attempting to enhance with AI for modern styling and imagery...");
+      let generatedProjectFiles: ProjectFile[] = projectFiles; // Start with the template
 
-      // Try to enhance with AI if possible, but don't fail if it doesn't work
       try {
-        console.log("Attempting to enhance with AI...");
         const structureResponse = await this.client.chat.completions.create({
           messages: [
-            { role: "system", content: "You are an expert Next.js developer. Generate complete, production-ready code files. Return ONLY a valid JSON array with no markdown formatting or explanations. Each object should have: path, content, type, language fields." },
+            { role: "system", content: "You are an expert Next.js developer. Generate complete, production-ready code files with a focus on beautiful, modern UI, including relevant images and diverse color palettes. Return ONLY a valid JSON array with no markdown formatting or explanations. Each object should have: path, content, type, language fields." },
             { role: "user", content: structurePrompt }
           ],
           max_tokens: 8192,
-          temperature: 0.2,
+          temperature: 0.7, // Increased temperature for more creativity
           model: modelName
         });
 
@@ -193,14 +191,14 @@ Requirements:
             type: file.type || "file",
             language: file.language
           }));
-          console.log("AI enhancement successful, using AI-generated files");
+          console.log("AI enhancement successful, using AI-generated files with modern styling.");
         }
       } catch (error) {
         console.error("AI enhancement failed, using template:", error.message);
-        // Continue with the template files
+        // Continue with the template files if AI fails
       }
 
-      // Step 4: Enhance with styling
+      // Step 4: Enhance with styling (now part of AI generation, but can be refined here if needed)
       onProgress({
         progress: 80,
         step: "Applying styles",
@@ -253,22 +251,21 @@ Requirements:
             lint: "next lint"
           },
           dependencies: {
-            "next": "^14.0.0",
-            "react": "^18.2.0",
-            "react-dom": "^18.2.0",
-            "typescript": "^5.3.3",
-            "@types/node": "^20.10.5",
-            "@types/react": "^18.2.45",
-            "@types/react-dom": "^18.2.18",
-            "tailwindcss": "^3.3.5",
+            "next": "14.0.0",
+            "react": "^18.0.0",
+            "react-dom": "^18.0.0",
+            "typescript": "^5.0.0",
+            "@types/node": "^20.0.0",
+            "@types/react": "^18.0.0",
+            "@types/react-dom": "^18.0.0",
+            "tailwindcss": "^3.3.0",
             "autoprefixer": "^10.4.16",
-            "postcss": "^8.4.32",
-            "zustand": "^4.4.7", // State management for tasks
-            "react-beautiful-dnd": "^13.1.1" // For drag and drop
-          },
-          devDependencies: {
-            "eslint": "^8.56.0",
-            "eslint-config-next": "14.0.4"
+            "postcss": "^8.4.31",
+            "framer-motion": "^10.16.0",
+            "lucide-react": "^0.294.0",
+            "@headlessui/react": "^1.7.17",
+            "clsx": "^2.0.0",
+            "next-themes": "^0.2.1"
           }
         }, null, 2),
         type: "file",
@@ -324,23 +321,152 @@ body {
       },
       {
         path: "app/page.tsx",
-        content: `
-'use client';
+        content: `'use client';
+import Image from 'next/image';
+import Link from 'next/link';
+import { motion } from 'framer-motion';
+import { ArrowRight, Star, Users, Zap } from 'lucide-react';
 
-import React from 'react';
-import TaskBoard from '@/components/TaskBoard';
-
-export default function HomePage() {
+export default function Home() {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-8 md:p-24">
-      <div className="w-full max-w-7xl mx-auto">
-        <h1 className="text-4xl font-bold mb-8 text-center">Task Management App</h1>
-        <TaskBoard />
-      </div>
-    </main>
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-indigo-50">
+      {/* Hero Section */}
+      <section className="relative py-20 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+            >
+              <h1 className="text-4xl md:text-6xl font-bold text-gray-900 leading-tight">
+                Welcome to{' '}
+                <span className="bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                  ${projectName}
+                </span>
+              </h1>
+              <p className="text-xl text-gray-600 mt-6 leading-relaxed">
+                Experience the future of task management with our intuitive, 
+                powerful platform designed to boost your productivity.
+              </p>
+              <div className="mt-8 flex flex-col sm:flex-row gap-4">
+                <Link
+                  href="/dashboard"
+                  className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 py-4 rounded-lg font-semibold hover:shadow-lg transition-all duration-300 flex items-center justify-center group"
+                >
+                  Get Started
+                  <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                </Link>
+                <Link
+                  href="/features"
+                  className="border-2 border-purple-600 text-purple-600 px-8 py-4 rounded-lg font-semibold hover:bg-purple-50 transition-all duration-300"
+                >
+                  Learn More
+                </Link>
+              </div>
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className="relative"
+            >
+              <div className="relative w-full h-96 rounded-2xl overflow-hidden shadow-2xl">
+                <Image
+                  src="https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=800&h=600&fit=crop&crop=center"
+                  alt="Task Management Dashboard"
+                  fill
+                  className="object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-purple-900/20 to-transparent" />
+              </div>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
+      {/* Features Section */}
+      <section className="py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+              Why Choose ${projectName}?
+            </h2>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+              Discover the features that make us the preferred choice for teams worldwide.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8">
+            {[
+              {
+                icon: <Zap className="w-8 h-8" />,
+                title: "Lightning Fast",
+                description: "Built for speed with modern technologies and optimized performance.",
+                color: "from-yellow-400 to-orange-500"
+              },
+              {
+                icon: <Users className="w-8 h-8" />,
+                title: "Team Collaboration", 
+                description: "Work together seamlessly with real-time updates and sharing.",
+                color: "from-blue-400 to-purple-500"
+              },
+              {
+                icon: <Star className="w-8 h-8" />,
+                title: "Premium Experience",
+                description: "Enjoy a polished, intuitive interface designed for productivity.",
+                color: "from-pink-400 to-red-500"
+              }
+            ].map((feature, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: index * 0.1 }}
+                className="bg-white rounded-xl p-8 shadow-lg hover:shadow-xl transition-shadow duration-300 border border-gray-100"
+              >
+                <div className={\`w-16 h-16 bg-gradient-to-r \${feature.color} rounded-lg flex items-center justify-center text-white mb-6\`}>
+                  {feature.icon}
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-4">
+                  {feature.title}
+                </h3>
+                <p className="text-gray-600 leading-relaxed">
+                  {feature.description}
+                </p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-20 bg-gradient-to-r from-purple-600 to-pink-600">
+        <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+          >
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
+              Ready to Transform Your Workflow?
+            </h2>
+            <p className="text-xl text-purple-100 mb-8">
+              Join thousands of teams already using ${projectName} to achieve more.
+            </p>
+            <Link
+              href="/signup"
+              className="bg-white text-purple-600 px-8 py-4 rounded-lg font-semibold hover:bg-gray-50 transition-colors duration-300 inline-flex items-center"
+            >
+              Start Free Trial
+              <ArrowRight className="ml-2 w-5 h-5" />
+            </Link>
+          </motion.div>
+        </div>
+      </section>
+    </div>
   );
-}
-`,
+}`,
         type: "file",
         language: "typescript"
       },
@@ -435,6 +561,7 @@ interface TaskCardProps {
     description?: string;
     dueDate?: string;
     category?: string;
+    completed?: boolean; // Added completed status
   };
 }
 
