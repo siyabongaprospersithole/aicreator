@@ -64,17 +64,71 @@ export class E2BService {
         console.log(`Uploaded file: ${file.path}`);
       }
 
-      // Install dependencies if package.json exists
+      // Check if this is a Next.js project
+      const isNextJs = files.some(f => f.path.includes('app/page.tsx') || f.path.includes('pages/'));
       const hasPackageJson = files.some(f => f.path === 'package.json');
-      if (hasPackageJson) {
+
+      if (isNextJs && !hasPackageJson) {
+        // Create a basic Next.js package.json
+        console.log('Creating Next.js package.json...');
+        const nextPackageJson = {
+          "name": "generated-nextjs-app",
+          "version": "0.1.0",
+          "private": true,
+          "scripts": {
+            "dev": "next dev --hostname 0.0.0.0 --port 3000",
+            "build": "next build",
+            "start": "next start --hostname 0.0.0.0 --port 3000"
+          },
+          "dependencies": {
+            "next": "14.0.0",
+            "react": "^18",
+            "react-dom": "^18"
+          },
+          "devDependencies": {
+            "typescript": "^5",
+            "@types/node": "^20",
+            "@types/react": "^18",
+            "@types/react-dom": "^18"
+          }
+        };
+        await sandbox.files.write('package.json', JSON.stringify(nextPackageJson, null, 2));
+        
+        // Create next.config.js for proper hosting
+        const nextConfig = `/** @type {import('next').NextConfig} */
+const nextConfig = {
+  output: 'standalone',
+  experimental: {
+    appDir: true
+  }
+}
+
+module.exports = nextConfig`;
+        await sandbox.files.write('next.config.js', nextConfig);
+      }
+
+      // Install dependencies
+      if (hasPackageJson || isNextJs) {
         console.log('Installing dependencies...');
         const installResult = await sandbox.commands.run('npm install');
         console.log('npm install result:', installResult.stdout);
+        
+        if (installResult.stderr && installResult.stderr.includes('error')) {
+          console.log('npm install errors:', installResult.stderr);
+        }
       }
 
       // Start the development server
       console.log('Starting development server...');
-      const startCommand = hasPackageJson ? 'npm run dev' : 'npx serve -s . -p 3000 -H 0.0.0.0';
+      let startCommand;
+      
+      if (isNextJs) {
+        startCommand = 'npm run dev';
+      } else if (hasPackageJson) {
+        startCommand = 'npm run dev';
+      } else {
+        startCommand = 'npx serve -s . -p 3000 -H 0.0.0.0';
+      }
 
       // Start server in background
       sandbox.commands.run(startCommand).catch(error => {
