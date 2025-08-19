@@ -76,9 +76,9 @@ export class E2BService {
           "version": "0.1.0",
           "private": true,
           "scripts": {
-            "dev": "HOSTNAME=0.0.0.0 next dev --hostname 0.0.0.0 --port 3000 --turbo",
-            "build": "next build",
-            "start": "HOSTNAME=0.0.0.0 next start --hostname 0.0.0.0 --port 3000"
+            "dev": "next dev --hostname 0.0.0.0 --port 3000",
+            "build": "next build", 
+            "start": "next start --hostname 0.0.0.0 --port 3000"
           },
           "dependencies": {
             "next": "^14.0.0",
@@ -102,6 +102,20 @@ const nextConfig = {
   // Disable host checks for E2B
   devIndicators: {
     buildActivity: false
+  },
+  // Allow E2B domains
+  async headers() {
+    return [
+      {
+        source: '/(.*)',
+        headers: [
+          {
+            key: 'X-Frame-Options',
+            value: 'SAMEORIGIN',
+          },
+        ],
+      },
+    ];
   }
 }
 
@@ -139,7 +153,7 @@ module.exports = nextConfig`;
       
       if (isNextJs) {
         // Set environment variables to disable host checking
-        startCommand = 'HOSTNAME=0.0.0.0 NEXT_PUBLIC_HOSTNAME=0.0.0.0 npm run dev';
+        startCommand = 'HOSTNAME=0.0.0.0 PORT=3000 NEXT_PUBLIC_HOSTNAME=0.0.0.0 NODE_ENV=development npm run dev -- --hostname 0.0.0.0 --port 3000';
       } else if (hasPackageJson) {
         startCommand = 'npm run dev';
       } else {
