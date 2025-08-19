@@ -69,56 +69,60 @@ export class E2BService {
       const hasPackageJson = files.some(f => f.path === 'package.json');
 
       if (isNextJs && !hasPackageJson) {
-        // Create a basic Next.js package.json
-        console.log('Creating Next.js package.json...');
+        // Create a minimal Next.js package.json with only essential dependencies
+        console.log('Creating minimal Next.js package.json...');
         const nextPackageJson = {
           "name": "generated-nextjs-app",
           "version": "0.1.0",
           "private": true,
           "scripts": {
-            "dev": "next dev --hostname 0.0.0.0 --port 3000",
+            "dev": "next dev --hostname 0.0.0.0 --port 3000 --turbo",
             "build": "next build",
             "start": "next start --hostname 0.0.0.0 --port 3000"
           },
           "dependencies": {
-            "next": "14.0.0",
-            "react": "^18",
-            "react-dom": "^18"
-          },
-          "devDependencies": {
-            "typescript": "^5",
-            "@types/node": "^20",
-            "@types/react": "^18",
-            "@types/react-dom": "^18"
+            "next": "^14.0.0",
+            "react": "^18.0.0",
+            "react-dom": "^18.0.0"
           }
         };
         await sandbox.files.write('package.json', JSON.stringify(nextPackageJson, null, 2));
         
-        // Create next.config.js for proper hosting
+        // Create simplified next.config.js
         const nextConfig = `/** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'standalone',
-  experimental: {
-    appDir: true
-  }
+  output: 'standalone'
 }
 
 module.exports = nextConfig`;
         await sandbox.files.write('next.config.js', nextConfig);
       }
 
-      // Install dependencies
+      // Install dependencies with timeout
       if (hasPackageJson || isNextJs) {
         console.log('Installing dependencies...');
-        const installResult = await sandbox.commands.run('npm install');
-        console.log('npm install result:', installResult.stdout);
-        
-        if (installResult.stderr && installResult.stderr.includes('error')) {
-          console.log('npm install errors:', installResult.stderr);
+        try {
+          const installResult = await sandbox.commands.run('npm install --no-audit --no-fund', {
+            timeoutMs: 120000 // 2 minute timeout
+          });
+          console.log('npm install result:', installResult.stdout);
+          
+          if (installResult.stderr && installResult.stderr.includes('error')) {
+            console.log('npm install errors:', installResult.stderr);
+          }
+        } catch (error) {
+          console.log('npm install timeout or error, trying alternative approach...');
+          // Fallback to serve if npm install fails
+          const serveCommand = 'npx serve -s . -p 3000 -H 0.0.0.0';
+          sandbox.commands.run(serveCommand, { timeoutMs: 60000 }).catch(err => {
+            console.log('Serve command error:', err.message);
+          });
+          await new Promise(resolve => setTimeout(resolve, 5000));
+          return `https://${sandbox.sandboxId}.e2b.dev`;
         }
       }
 
-      // Start the development server
+      // Start the development server with timeout
       console.log('Starting development server...');
       let startCommand;
       
@@ -130,13 +134,15 @@ module.exports = nextConfig`;
         startCommand = 'npx serve -s . -p 3000 -H 0.0.0.0';
       }
 
-      // Start server in background
-      sandbox.commands.run(startCommand).catch(error => {
+      // Start server in background with timeout
+      sandbox.commands.run(startCommand, { 
+        timeoutMs: 180000 // 3 minute timeout
+      }).catch(error => {
         console.log('Server start command completed or errored:', error.message);
       });
 
-      // Wait a moment for server to start
-      await new Promise(resolve => setTimeout(resolve, 3000));
+      // Wait longer for server to start
+      await new Promise(resolve => setTimeout(resolve, 8000));
 
       // Return the preview URL - E2B provides this automatically
       return `https://${sandbox.sandboxId}.e2b.dev`;
