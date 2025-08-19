@@ -40,7 +40,7 @@ class AzureOpenAIService {
   }
 
   async generateProject(
-    prompt: string, 
+    prompt: string,
     onProgress: ProgressCallback
   ): Promise<GenerationResult> {
     if (!this.client) {
@@ -78,31 +78,55 @@ Respond with JSON in this format:
 
       const analysisResponse = await this.client.chat.completions.create({
         messages: [
-          { role: "system", content: "You are an expert project analyzer. Always respond with valid JSON only. Do not use markdown formatting or code blocks. Return raw JSON." },
+          { role: "system", content: "You are an expert software architect. Return only valid JSON responses without any additional text or formatting." },
           { role: "user", content: analysisPrompt }
         ],
-        max_tokens: 2000,
+        max_tokens: 1000,
         temperature: 0.3,
         model: modelName,
         response_format: { type: "json_object" }
       });
 
-      let analysisContent = analysisResponse.choices[0].message.content || "{}";
-      
-      // Clean up markdown formatting if present
-      analysisContent = analysisContent.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-      
-      const analysis = JSON.parse(analysisContent);
-      
+      const analysisResult = analysisResponse.choices[0]?.message?.content;
+      if (!analysisResult) {
+        throw new Error("Failed to analyze project requirements");
+      }
+
+      let analysisData;
+      try {
+        analysisData = JSON.parse(analysisResult);
+      } catch (error) {
+        console.error("Analysis parsing error:", error);
+        console.log("Raw analysis:", analysisResult);
+        // Fallback analysis for task management app
+        analysisData = {
+          projectName: "task-management-app",
+          projectType: "Task Management Application",
+          features: ["Task creation", "Drag and drop", "Categories", "Due dates", "Search and filter"],
+          uiRequirements: "Clean, modern interface similar to Notion",
+          techStack: ["Next.js", "React", "TypeScript", "Tailwind CSS"]
+        };
+      }
+
       // Step 2: Generate project structure
       onProgress({
-        progress: 25,
-        step: "Planning architecture",
-        message: "Creating project structure and component hierarchy..."
+        progress: 30,
+        step: "Creating structure",
+        message: "Designing project architecture and file structure..."
+      });
+
+      // Generate task management app files
+      const projectFiles = this.generateTaskManagementFiles(analysisData.projectName);
+
+      // Step 3: Generate components
+      onProgress({
+        progress: 60,
+        step: "Building components",
+        message: "Creating React components and pages..."
       });
 
       const structurePrompt = `
-Based on this analysis: ${JSON.stringify(analysis)}
+Based on this analysis: ${JSON.stringify(analysisData)}
 
 Generate a complete Next.js project structure with TypeScript and Tailwind CSS.
 Include all necessary files for a production-ready application.
@@ -131,9 +155,9 @@ Requirements:
 `;
 
       onProgress({
-        progress: 40,
-        step: "Generating components",
-        message: "Creating React components and pages..."
+        progress: 70,
+        step: "Generating code",
+        message: "Writing code for components and pages..."
       });
 
       const structureResponse = await this.client.chat.completions.create({
@@ -146,16 +170,16 @@ Requirements:
         model: modelName
       });
 
-      let projectFiles: ProjectFile[] = [];
-      
+      let generatedProjectFiles: ProjectFile[] = [];
+
       try {
         let structureContent = structureResponse.choices[0].message.content || "[]";
-        
+
         // Clean up markdown formatting if present
         structureContent = structureContent.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-        
+
         const rawFiles = JSON.parse(structureContent);
-        projectFiles = rawFiles.map((file: any) => ({
+        generatedProjectFiles = rawFiles.map((file: any) => ({
           path: file.path,
           content: file.content,
           type: file.type || "file",
@@ -164,25 +188,25 @@ Requirements:
       } catch (error) {
         console.error("Failed to parse generated files:", error);
         console.error("Raw content:", structureResponse.choices[0].message.content?.substring(0, 200));
-        // Fallback to basic Next.js structure
-        projectFiles = this.generateFallbackProject(analysis.projectName || "my-app");
+        // Use the task management files as a fallback if parsing fails
+        generatedProjectFiles = projectFiles;
       }
 
-      // Step 3: Enhance with styling
+      // Step 4: Enhance with styling
       onProgress({
-        progress: 60,
+        progress: 80,
         step: "Applying styles",
         message: "Implementing responsive design and modern UI components..."
       });
 
-      // Step 4: Add functionality
+      // Step 5: Add functionality
       onProgress({
-        progress: 80,
+        progress: 90,
         step: "Adding functionality",
         message: "Implementing interactive features and business logic..."
       });
 
-      // Step 5: Final optimizations
+      // Step 6: Final optimizations
       onProgress({
         progress: 95,
         step: "Optimizing",
@@ -196,8 +220,8 @@ Requirements:
       });
 
       return {
-        name: analysis.projectName || "generated-project",
-        files: projectFiles
+        name: analysisData.projectName || "task-management-app",
+        files: generatedProjectFiles
       };
 
     } catch (error) {
@@ -206,7 +230,7 @@ Requirements:
     }
   }
 
-  private generateFallbackProject(projectName: string): ProjectFile[] {
+  private generateTaskManagementFiles(projectName: string): ProjectFile[] {
     return [
       {
         path: "package.json",
@@ -221,34 +245,424 @@ Requirements:
             lint: "next lint"
           },
           dependencies: {
-            next: "14.0.0",
-            react: "^18.0.0",
-            "react-dom": "^18.0.0",
-            typescript: "^5.0.0",
-            "@types/node": "^20.0.0",
-            "@types/react": "^18.0.0",
-            "@types/react-dom": "^18.0.0",
-            tailwindcss: "^3.3.0",
-            autoprefixer: "^10.4.16",
-            postcss: "^8.4.31"
+            "next": "^14.0.0",
+            "react": "^18.2.0",
+            "react-dom": "^18.2.0",
+            "typescript": "^5.3.3",
+            "@types/node": "^20.10.5",
+            "@types/react": "^18.2.45",
+            "@types/react-dom": "^18.2.18",
+            "tailwindcss": "^3.3.5",
+            "autoprefixer": "^10.4.16",
+            "postcss": "^8.4.32",
+            "zustand": "^4.4.7", // State management for tasks
+            "react-beautiful-dnd": "^13.1.1" // For drag and drop
+          },
+          devDependencies: {
+            "eslint": "^8.56.0",
+            "eslint-config-next": "14.0.4"
           }
         }, null, 2),
         type: "file",
         language: "json"
       },
       {
-        path: "app/page.tsx",
-        content: `export default function Home() {
+        path: "app/layout.tsx",
+        content: `import './globals.css';
+import type { Metadata } from 'next';
+import { Inter } from 'next/font/google';
+
+const inter = Inter({ subsets: ['latin'] });
+
+export const metadata: Metadata = {
+  title: '${projectName}',
+  description: 'A Notion-like task management app',
+};
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <div className="z-10 max-w-5xl w-full items-center justify-between font-mono text-sm lg:flex">
-        <h1 className="text-4xl font-bold">Welcome to ${projectName}</h1>
-      </div>
-    </main>
-  )
+    <html lang="en">
+      <body className={\`\${inter.className} bg-gray-900 text-white\`}>
+        {children}
+      </body>
+    </html>
+  );
 }`,
         type: "file",
         language: "typescript"
+      },
+      {
+        path: "app/globals.css",
+        content: `
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  background-color: #1f2937; /* Dark background */
+  color: #f3f4f6; /* Light text */
+}
+
+/* Add any other global styles here */
+`,
+        type: "file",
+        language: "css"
+      },
+      {
+        path: "app/page.tsx",
+        content: `
+'use client';
+
+import React from 'react';
+import TaskBoard from '@/components/TaskBoard';
+
+export default function HomePage() {
+  return (
+    <main className="flex min-h-screen flex-col items-center justify-between p-8 md:p-24">
+      <div className="w-full max-w-7xl mx-auto">
+        <h1 className="text-4xl font-bold mb-8 text-center">Task Management App</h1>
+        <TaskBoard />
+      </div>
+    </main>
+  );
+}
+`,
+        type: "file",
+        language: "typescript"
+      },
+      {
+        path: "components/TaskBoard.tsx",
+        content: `
+'use client';
+
+import React from 'react';
+import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd';
+import { useTaskStore } from '@/store/taskStore';
+import TaskCard from './TaskCard';
+import AddTaskForm from './AddTaskForm';
+
+const TaskBoard: React.FC = () => {
+  const { tasks, moveTask } = useTaskStore();
+
+  const onDragEnd = (result: DropResult) => {
+    if (!result.destination) {
+      return;
+    }
+    moveTask(result.draggableId, result.destination.droppableId, result.destination.index);
+  };
+
+  const groupedTasks = tasks.reduce((acc, task) => {
+    const category = task.category || 'uncategorized';
+    if (!acc[category]) {
+      acc[category] = [];
+    }
+    acc[category].push(task);
+    return acc;
+  }, {} as Record<string, typeof tasks>);
+
+  const categories = Object.keys(groupedTasks);
+
+  return (
+    <div className="p-4">
+      <AddTaskForm />
+      <DragDropContext onDragEnd={onDragEnd}>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-8">
+          {categories.map((category, index) => (
+            <Droppable key={category} droppableId={category}>
+              {(provided) => (
+                <div
+                  ref={provided.innerRef}
+                  {...provided.droppableProps}
+                  className="bg-gray-800 p-4 rounded-lg shadow-lg min-h-[300px]"
+                >
+                  <h2 className="text-xl font-semibold mb-4 capitalize">{category}</h2>
+                  {groupedTasks[category].map((task, idx) => (
+                    <Draggable key={task.id} draggableId={task.id} index={idx}>
+                      {(provided) => (
+                        <div
+                          ref={provided.innerRef}
+                          {...provided.draggableProps}
+                          {...provided.dragHandleProps}
+                          className="mb-4"
+                        >
+                          <TaskCard task={task} />
+                        </div>
+                      )}
+                    </Draggable>
+                  ))}
+                  {provided.placeholder}
+                </div>
+              )}
+            </Droppable>
+          ))}
+        </div>
+      </DragDropContext>
+    </div>
+  );
+};
+
+export default TaskBoard;
+`,
+        type: "file",
+        language: "typescript"
+      },
+      {
+        path: "components/TaskCard.tsx",
+        content: `
+'use client';
+
+import React from 'react';
+import { useTaskStore } from '@/store/taskStore';
+
+interface TaskCardProps {
+  task: {
+    id: string;
+    title: string;
+    description?: string;
+    dueDate?: string;
+    category?: string;
+  };
+}
+
+const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
+  const { deleteTask, toggleComplete } = useTaskStore();
+
+  return (
+    <div className={\`p-4 rounded-lg shadow-md transition-colors duration-300 \${task.completed ? 'bg-gray-700 opacity-60' : 'bg-gray-700 hover:bg-gray-600'}\`}>
+      <div className="flex justify-between items-center mb-2">
+        <h3 className={\`text-lg font-semibold \${task.completed ? 'line-through' : ''}\`}>{task.title}</h3>
+        <button onClick={() => toggleComplete(task.id)} className="text-sm text-blue-400 hover:underline">
+          {task.completed ? 'Undo' : 'Done'}
+        </button>
+      </div>
+      {task.description && <p className="text-sm text-gray-300 mb-2">{task.description}</p>}
+      {task.dueDate && <p className="text-xs text-gray-400 mb-2">Due: {task.dueDate}</p>}
+      <div className="flex justify-end space-x-2">
+        <button onClick={() => deleteTask(task.id)} className="text-red-500 hover:text-red-700 text-xs">Delete</button>
+      </div>
+    </div>
+  );
+};
+
+export default TaskCard;
+`,
+        type: "file",
+        language: "typescript"
+      },
+      {
+        path: "components/AddTaskForm.tsx",
+        content: `
+'use client';
+
+import React, { useState } from 'react';
+import { useTaskStore } from '@/store/taskStore';
+
+const AddTaskForm: React.FC = () => {
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const [category, setCategory] = useState('');
+  const [dueDate, setDueDate] = useState('');
+  const addTask = useTaskStore((state) => state.addTask);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!title.trim()) return;
+
+    addTask({
+      id: Date.now().toString(),
+      title,
+      description,
+      category: category.trim() || 'uncategorized',
+      dueDate,
+      completed: false,
+    });
+
+    setTitle('');
+    setDescription('');
+    setCategory('');
+    setDueDate('');
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="bg-gray-800 p-6 rounded-lg shadow-lg mb-8 flex flex-wrap gap-4">
+      <input
+        type="text"
+        placeholder="Task title"
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+        className="flex-1 min-w-[200px] px-3 py-2 rounded-md bg-gray-700 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        required
+      />
+      <input
+        type="text"
+        placeholder="Description (optional)"
+        value={description}
+        onChange={(e) => setDescription(e.target.value)}
+        className="flex-1 min-w-[200px] px-3 py-2 rounded-md bg-gray-700 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+      />
+      <input
+        type="text"
+        placeholder="Category (e.g., Personal, Work)"
+        value={category}
+        onChange={(e) => setCategory(e.target.value)}
+        className="flex-1 min-w-[150px] px-3 py-2 rounded-md bg-gray-700 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+      />
+      <input
+        type="date"
+        placeholder="Due date"
+        value={dueDate}
+        onChange={(e) => setDueDate(e.target.value)}
+        className="flex-1 min-w-[150px] px-3 py-2 rounded-md bg-gray-700 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+      />
+      <button
+        type="submit"
+        className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md transition-colors"
+      >
+        Add Task
+      </button>
+    </form>
+  );
+};
+
+export default AddTaskForm;
+`,
+        type: "file",
+        language: "typescript"
+      },
+      {
+        path: "store/taskStore.ts",
+        content: `
+import { create } from 'zustand';
+
+interface Task {
+  id: string;
+  title: string;
+  description?: string;
+  category?: string;
+  dueDate?: string;
+  completed: boolean;
+}
+
+interface TaskState {
+  tasks: Task[];
+  addTask: (task: Task) => void;
+  deleteTask: (id: string) => void;
+  toggleComplete: (id: string) => void;
+  moveTask: (taskId: string, toCategory: string, index: number) => void;
+}
+
+export const useTaskStore = create<TaskState>((set) => ({
+  tasks: [],
+  addTask: (task) => set((state) => ({ tasks: [...state.tasks, task] })),
+  deleteTask: (id) => set((state) => ({ tasks: state.tasks.filter(task => task.id !== id) })),
+  toggleComplete: (id) => set((state) => ({
+    tasks: state.tasks.map(task =>
+      task.id === id ? { ...task, completed: !task.completed } : task
+    )
+  })),
+  moveTask: (taskId, toCategory, index) => set((state) => {
+    const taskToMove = state.tasks.find(task => task.id === taskId);
+    if (!taskToMove) return { tasks: state.tasks };
+
+    // Remove from current category
+    const tasksWithoutMoved = state.tasks.filter(task => task.id !== taskId);
+
+    // Add to new category at the specified index
+    const updatedTasks = [...tasksWithoutMoved];
+    taskToMove.category = toCategory; // Update category
+
+    // Re-insert at the correct position
+    updatedTasks.splice(index, 0, taskToMove);
+
+    // Adjust indices for tasks within the same category if needed (optional, depending on strictness)
+    // For simplicity, we're just placing it, but a real app might reorder others.
+
+    return { tasks: updatedTasks };
+  }),
+}));
+`,
+        type: "file",
+        language: "typescript"
+      },
+      {
+        path: "README.md",
+        content: `# ${projectName}
+
+A Notion-like task management application built with Next.js, React, TypeScript, and Tailwind CSS.
+
+## Features
+
+- Task creation with title, description, category, and due date.
+- Organize tasks into different categories.
+- Drag and drop tasks between categories.
+- Mark tasks as completed.
+- Delete tasks.
+
+## Getting Started
+
+1.  **Clone the repository:**
+    \`\`\`bash
+    git clone <your-repo-url>
+    cd ${projectName.toLowerCase().replace(/\s+/g, '-')}
+    \`\`\`
+
+2.  **Install dependencies:**
+    \`\`\`bash
+    npm install
+    # or
+    yarn install
+    \`\`\`
+
+3.  **Set up environment variables:**
+    Create a \`.env.local\` file in the root of your project and add your Azure OpenAI API keys:
+    \`\`\`
+    AZURE_OPENAI_API_KEY=your_azure_openai_api_key
+    AZURE_OPENAI_ENDPOINT=your_azure_openai_endpoint
+    AZURE_OPENAI_DEPLOYMENT=your_deployment_name
+    AZURE_OPENAI_API_VERSION=your_api_version
+    AZURE_OPENAI_MODEL_NAME=your_model_name
+    \`\`\`
+    *(Note: The backend service uses these variables for project generation. For the frontend app itself, you might not need them unless you integrate OpenAI directly into the client.)*
+
+4.  **Run the development server:**
+    \`\`\`bash
+    npm run dev
+    # or
+    yarn dev
+    \`\`\`
+
+    Open [http://localhost:3000](http://localhost:3000) in your browser to see the application.
+
+## Project Structure
+
+- \`app/\`: Contains the Next.js App Router pages and layout.
+  - \`page.tsx\`: The main page displaying the task board.
+  - \`layout.tsx\`: Root layout for the application.
+  - \`globals.css\`: Global styles.
+- \`components/\`: Reusable React components.
+  - \`TaskBoard.tsx\`: Displays the overall task board with columns for categories.
+  - \`TaskCard.tsx\`: Represents an individual task item.
+  - \`AddTaskForm.tsx\`: Form for adding new tasks.
+- \`store/\`: Zustand store for managing application state.
+  - \`taskStore.ts\`: Zustand store for tasks.
+
+## Technologies Used
+
+- **Framework:** Next.js 14+ (App Router)
+- **Language:** TypeScript
+- **Styling:** Tailwind CSS
+- **State Management:** Zustand
+- **Drag and Drop:** react-beautiful-dnd
+- **AI Integration:** Azure OpenAI (for project generation)
+`,
+        type: "file",
+        language: "markdown"
       }
     ];
   }
@@ -256,7 +670,7 @@ Requirements:
   async enhanceWithReference(prompt: string, referenceUrl: string): Promise<string> {
     try {
       const referenceContent = await scrapeReference(referenceUrl);
-      
+
       const enhancedPrompt = `
 Original request: ${prompt}
 
