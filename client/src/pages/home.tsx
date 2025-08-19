@@ -1,8 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'wouter';
 import { useQuery } from '@tanstack/react-query';
 import ChatSidebar from '@/components/chat/chat-sidebar';
 import CodePreview from '@/components/preview/code-preview';
+import { Button } from '@/components/ui/button';
+import { useToast } from '@/components/ui/use-toast';
 import { Project } from '@/lib/types';
 import { useWebSocket } from '@/hooks/use-websocket';
 
@@ -10,15 +12,21 @@ export default function Home() {
   const { id: projectId } = useParams<{ id?: string }>();
   const [currentProject, setCurrentProject] = useState<Project | null>(null);
   const { lastMessage } = useWebSocket(projectId);
+  const { toast } = useToast();
 
-  const { data: project } = useQuery({
+  const { data: project, isLoading: isLoadingProject } = useQuery({
     queryKey: ['/api/projects', projectId],
     enabled: !!projectId,
   });
 
-  const { data: projects } = useQuery({
+  const { data: projects, isLoading: isLoadingProjects, refetch } = useQuery({
     queryKey: ['/api/projects'],
-    enabled: !projectId,
+    queryFn: async () => {
+      const response = await fetch('/api/projects');
+      if (!response.ok) throw new Error('Failed to fetch projects');
+      return response.json();
+    },
+    refetchInterval: 5000, // Refetch every 5 seconds to catch updates
   });
 
   useEffect(() => {
@@ -30,13 +38,36 @@ export default function Home() {
   }, [project, projects]);
 
   // Handle WebSocket messages
+  const handleWebSocketMessage = useCallback((message: any) => {
+    console.log('Home received WebSocket message:', message);
+
+    if (message.type === 'generation_complete') {
+      // Refetch projects when generation completes
+      refetch();
+      toast({
+        title: "Project Generated!",
+        description: "Your project has been generated successfully.",
+      });
+    } else if (message.type === 'generation_error') {
+      // Also refetch to update the project status
+      refetch();
+      toast({
+        title: "Generation Failed",
+        description: message.error || "An error occurred during generation.",
+        variant: "destructive",
+      });
+    } else if (message.type === 'status_update') {
+      // Refetch when project status updates
+      refetch();
+    }
+  }, [refetch, toast]);
+
   useEffect(() => {
     if (lastMessage) {
-      if (lastMessage.type === 'generation_complete' && lastMessage.project) {
-        setCurrentProject(lastMessage.project);
-      }
+      handleWebSocketMessage(lastMessage);
     }
-  }, [lastMessage]);
+  }, [lastMessage, handleWebSocketMessage]);
+
 
   return (
     <div className="h-screen overflow-hidden bg-slate-50" data-testid="main-layout">

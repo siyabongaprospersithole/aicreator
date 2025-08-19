@@ -14,13 +14,13 @@ export function useWebSocket(projectId?: string) {
 
     const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
     const wsUrl = `${protocol}//${window.location.host}/ws`;
-    
+
     const ws = new WebSocket(wsUrl);
 
     ws.onopen = () => {
       console.log('WebSocket connected');
       setIsConnected(true);
-      
+
       if (projectId) {
         ws.send(JSON.stringify({ type: 'join_project', projectId }));
       }
@@ -38,7 +38,7 @@ export function useWebSocket(projectId?: string) {
     ws.onclose = () => {
       console.log('WebSocket disconnected');
       setIsConnected(false);
-      
+
       // Attempt to reconnect after 3 seconds
       if (reconnectTimeoutRef.current) {
         clearTimeout(reconnectTimeoutRef.current);
