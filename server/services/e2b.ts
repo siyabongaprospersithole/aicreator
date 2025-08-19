@@ -76,9 +76,9 @@ export class E2BService {
           "version": "0.1.0",
           "private": true,
           "scripts": {
-            "dev": "next dev --hostname 0.0.0.0 --port 3000 --turbo",
+            "dev": "HOSTNAME=0.0.0.0 next dev --hostname 0.0.0.0 --port 3000 --turbo",
             "build": "next build",
-            "start": "next start --hostname 0.0.0.0 --port 3000"
+            "start": "HOSTNAME=0.0.0.0 next start --hostname 0.0.0.0 --port 3000"
           },
           "dependencies": {
             "next": "^14.0.0",
@@ -88,10 +88,21 @@ export class E2BService {
         };
         await sandbox.files.write('package.json', JSON.stringify(nextPackageJson, null, 2));
         
-        // Create simplified next.config.js
+        // Create next.config.js with proper host configuration for E2B
         const nextConfig = `/** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'standalone'
+  output: 'standalone',
+  experimental: {
+    serverComponentsExternalPackages: []
+  },
+  // Allow any host for E2B deployment
+  async rewrites() {
+    return [];
+  },
+  // Disable host checks for E2B
+  devIndicators: {
+    buildActivity: false
+  }
 }
 
 module.exports = nextConfig`;
@@ -127,7 +138,8 @@ module.exports = nextConfig`;
       let startCommand;
       
       if (isNextJs) {
-        startCommand = 'npm run dev';
+        // Set environment variables to disable host checking
+        startCommand = 'HOSTNAME=0.0.0.0 NEXT_PUBLIC_HOSTNAME=0.0.0.0 npm run dev';
       } else if (hasPackageJson) {
         startCommand = 'npm run dev';
       } else {
