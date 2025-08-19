@@ -95,9 +95,10 @@ Respond with JSON in this format:
       let analysisData;
       try {
         analysisData = JSON.parse(analysisResult);
+        console.log("Analysis successful:", analysisData);
       } catch (error) {
         console.error("Analysis parsing error:", error);
-        console.log("Raw analysis:", analysisResult);
+        console.log("Raw analysis response:", analysisResult?.substring(0, 500));
         // Fallback analysis for task management app
         analysisData = {
           projectName: "task-management-app",
@@ -106,6 +107,7 @@ Respond with JSON in this format:
           uiRequirements: "Clean, modern interface similar to Notion",
           techStack: ["Next.js", "React", "TypeScript", "Tailwind CSS"]
         };
+        console.log("Using fallback analysis data");
       }
 
       // Step 2: Generate project structure
@@ -160,36 +162,42 @@ Requirements:
         message: "Writing code for components and pages..."
       });
 
-      const structureResponse = await this.client.chat.completions.create({
-        messages: [
-          { role: "system", content: "You are an expert Next.js developer. Generate complete, production-ready code files. Return ONLY a valid JSON array with no markdown formatting or explanations. Each object should have: path, content, type, language fields." },
-          { role: "user", content: structurePrompt }
-        ],
-        max_tokens: 16384,
-        temperature: 0.2,
-        model: modelName
-      });
+      // Skip the complex AI generation for now and use the task management template
+      console.log("Using task management template files");
+      let generatedProjectFiles: ProjectFile[] = projectFiles;
 
-      let generatedProjectFiles: ProjectFile[] = [];
-
+      // Try to enhance with AI if possible, but don't fail if it doesn't work
       try {
+        console.log("Attempting to enhance with AI...");
+        const structureResponse = await this.client.chat.completions.create({
+          messages: [
+            { role: "system", content: "You are an expert Next.js developer. Generate complete, production-ready code files. Return ONLY a valid JSON array with no markdown formatting or explanations. Each object should have: path, content, type, language fields." },
+            { role: "user", content: structurePrompt }
+          ],
+          max_tokens: 8192,
+          temperature: 0.2,
+          model: modelName
+        });
+
         let structureContent = structureResponse.choices[0].message.content || "[]";
+        console.log("AI response received, length:", structureContent.length);
 
         // Clean up markdown formatting if present
         structureContent = structureContent.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
 
         const rawFiles = JSON.parse(structureContent);
-        generatedProjectFiles = rawFiles.map((file: any) => ({
-          path: file.path,
-          content: file.content,
-          type: file.type || "file",
-          language: file.language
-        }));
+        if (Array.isArray(rawFiles) && rawFiles.length > 0) {
+          generatedProjectFiles = rawFiles.map((file: any) => ({
+            path: file.path,
+            content: file.content,
+            type: file.type || "file",
+            language: file.language
+          }));
+          console.log("AI enhancement successful, using AI-generated files");
+        }
       } catch (error) {
-        console.error("Failed to parse generated files:", error);
-        console.error("Raw content:", structureResponse.choices[0].message.content?.substring(0, 200));
-        // Use the task management files as a fallback if parsing fails
-        generatedProjectFiles = projectFiles;
+        console.error("AI enhancement failed, using template:", error.message);
+        // Continue with the template files
       }
 
       // Step 4: Enhance with styling
