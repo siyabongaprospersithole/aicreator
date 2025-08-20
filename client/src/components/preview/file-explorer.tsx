@@ -94,8 +94,8 @@ export default function FileExplorer({ files, selectedFile, onFileSelect }: File
               if (isDirectory) {
                 toggleFolder(fullPath);
               } else {
-                // Find the original file using the constructed fullPath
-                const originalFile = files.find(f => f.path === fullPath.replace(parentPath + '/', '')) || null;
+                // Find the original file from the files prop using the full path
+                const originalFile = files.find(f => f.path === fullPath) || null;
                 onFileSelect(originalFile);
               }
             }}
@@ -110,7 +110,7 @@ export default function FileExplorer({ files, selectedFile, onFileSelect }: File
             )}
             <i className={`${getFileIcon(file)} text-xs`}></i>
             <span className={`text-slate-700 text-sm ${isSelected ? 'font-medium' : ''}`}>
-              {file.path}
+              {file.path.split('/').pop()}
             </span>
             {isSelected && file.type === 'file' && (
               <span className="text-xs text-emerald-600 ml-auto">●</span>

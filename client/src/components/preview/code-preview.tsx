@@ -12,6 +12,13 @@ export default function CodePreview({ project }: CodePreviewProps) {
   const [selectedFile, setSelectedFile] = useState<ProjectFile | null>(null);
   const [activeTab, setActiveTab] = useState<'preview' | 'code'>('preview');
 
+  const handleFileSelect = (file: ProjectFile | null) => {
+    setSelectedFile(file);
+    if (file) {
+      setActiveTab('code');
+    }
+  };
+
   const downloadMutation = useMutation({
     mutationFn: async (projectId: string) => {
       const response = await fetch(`/api/projects/${projectId}/download`);
@@ -117,7 +124,7 @@ export default function CodePreview({ project }: CodePreviewProps) {
         <FileExplorer
           files={project?.files || []}
           selectedFile={selectedFile}
-          onFileSelect={setSelectedFile}
+          onFileSelect={handleFileSelect}
         />
 
         {/* Editor and Preview Tabs */}
