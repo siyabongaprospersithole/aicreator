@@ -231,6 +231,41 @@ export default function RootLayout({
     }
   }
 
+  async getProjectFiles(sessionId: string): Promise<Array<{ path: string; content: string }>> {
+    try {
+      if (!this.apiKey || sessionId.startsWith('mock-session-')) {
+        return [];
+      }
+
+      const sandbox = await Sandbox.create({ 
+        apiKey: this.apiKey,
+        sandboxId: sessionId 
+      });
+
+      // List all files in the project directory
+      const result = await sandbox.commands.run('find . -type f -name "*.tsx" -o -name "*.ts" -o -name "*.js" -o -name "*.json" -o -name "*.css" -o -name "*.md" | head -20');
+      const filePaths = result.stdout.split('\n').filter(path => path.trim() && !path.includes('node_modules') && !path.includes('.git'));
+
+      const files = [];
+      for (const filePath of filePaths) {
+        try {
+          const content = await sandbox.files.read(filePath.replace('./', ''));
+          files.push({
+            path: filePath.replace('./', ''),
+            content: content
+          });
+        } catch (error) {
+          console.log(`Could not read file ${filePath}:`, error);
+        }
+      }
+
+      return files;
+    } catch (error) {
+      console.error("Error getting project files:", error);
+      return [];
+    }
+  }
+
   async destroySession(sessionId: string): Promise<void> {
     try {
       console.log(`Destroying E2B session: ${sessionId}`);

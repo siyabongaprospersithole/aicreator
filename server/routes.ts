@@ -248,6 +248,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const session = await e2bService.createSession();
         previewUrl = await e2bService.deployProject(session.id, result.files);
         
+        // Get complete file list from E2B (including auto-generated files)
+        const completeFiles = await e2bService.getProjectFiles(session.id);
+        if (completeFiles.length > 0) {
+          // Merge original files with complete E2B files, prioritizing E2B versions
+          const fileMap = new Map();
+          result.files.forEach(file => fileMap.set(file.path, file));
+          completeFiles.forEach(file => {
+            fileMap.set(file.path, {
+              path: file.path,
+              content: file.content,
+              type: 'file' as const,
+              language: file.path.endsWith('.tsx') ? 'typescript' : 
+                       file.path.endsWith('.ts') ? 'typescript' :
+                       file.path.endsWith('.js') ? 'javascript' :
+                       file.path.endsWith('.css') ? 'css' :
+                       file.path.endsWith('.json') ? 'json' : 'text'
+            });
+          });
+          result.files = Array.from(fileMap.values());
+        }
+        
         broadcast(projectId, {
           type: "generation_progress",
           progress: 95,
