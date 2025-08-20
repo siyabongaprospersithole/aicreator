@@ -80,9 +80,9 @@ export class E2BService {
             "version": "0.1.0",
             "private": true,
             "scripts": {
-              "dev": "HOSTNAME=0.0.0.0 PORT=3000 next dev --hostname 0.0.0.0 --port 3000",
+              "dev": "next dev --hostname 0.0.0.0 --port 3000",
               "build": "next build", 
-              "start": "HOSTNAME=0.0.0.0 PORT=3000 next start --hostname 0.0.0.0 --port 3000"
+              "start": "next start --hostname 0.0.0.0 --port 3000"
             },
             "dependencies": {
               "next": "^14.0.0",
@@ -117,6 +117,20 @@ const nextConfig = {
   },
   eslint: {
     ignoreDuringBuilds: true
+  },
+  // Disable host header validation
+  async headers() {
+    return [
+      {
+        source: '/(.*)',
+        headers: [
+          {
+            key: 'X-Frame-Options',
+            value: 'SAMEORIGIN'
+          }
+        ]
+      }
+    ]
   }
 }
 
