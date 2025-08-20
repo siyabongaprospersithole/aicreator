@@ -241,9 +241,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         broadcast(projectId, {
           type: "generation_progress",
           progress: 90,
-          step: "deploying",
+          step: "deploying", 
           message: "Deploying to live environment..."
         });
+
+        console.log('=== E2B DEPLOYMENT DEBUG ===');
+        console.log('API Key configured:', !!e2bService['apiKey']);
+        console.log('Files to deploy:', result.files.map(f => `${f.path} (${f.content.length} chars)`));
 
         const session = await e2bService.createSession();
         previewUrl = await e2bService.deployProject(session.id, result.files);

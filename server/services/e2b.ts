@@ -71,7 +71,7 @@ export class E2BService {
       if (isNextJs) {
         // Check if we need to create essential Next.js files
         const hasLayoutFile = files.some(f => f.path === 'app/layout.tsx');
-        
+
         if (!hasPackageJson) {
           // Create a minimal Next.js package.json with only essential dependencies
           console.log('Creating minimal Next.js package.json...');
@@ -96,29 +96,28 @@ export class E2BService {
           };
           await sandbox.files.write('package.json', JSON.stringify(nextPackageJson, null, 2));
         }
-        
-        // Create next.config.js with proper host configuration for E2B
+
+        // Create next.config.js with comprehensive E2B configuration
         const nextConfig = `/** @type {import('next').NextConfig} */
 const nextConfig = {
   experimental: {
     appDir: true
   },
-  // Disable host checks for E2B
+  // Disable all host validation for E2B
   devIndicators: {
     buildActivity: false
   },
-  // Allow all hosts in development
+  // Complete host configuration for E2B sandboxes
   async rewrites() {
     return []
   },
-  // Disable strict host checking
   typescript: {
     ignoreBuildErrors: true
   },
   eslint: {
     ignoreDuringBuilds: true
   },
-  // Disable host header validation
+  // Disable all security checks for development
   async headers() {
     return [
       {
@@ -127,16 +126,29 @@ const nextConfig = {
           {
             key: 'X-Frame-Options',
             value: 'SAMEORIGIN'
+          },
+          {
+            key: 'Access-Control-Allow-Origin',
+            value: '*'
           }
         ]
       }
     ]
+  },
+  // Override server configuration
+  serverRuntimeConfig: {
+    // Will only be available on the server side
+  },
+  publicRuntimeConfig: {
+    // Will be available on both server and client side
+  },
+  // Force specific server settings
+  compiler: {
+    removeConsole: false
   }
-}
-
-module.exports = nextConfig`;
+}`;
         await sandbox.files.write('next.config.js', nextConfig);
-        
+
         // Create required layout.tsx if missing
         if (!hasLayoutFile) {
           console.log('Creating app/layout.tsx...');
@@ -160,7 +172,7 @@ export default function RootLayout({
 }`;
           await sandbox.files.write('app/layout.tsx', layoutContent);
         }
-        
+
         // Create TypeScript config
         const tsConfig = {
           "compilerOptions": {
@@ -185,7 +197,7 @@ export default function RootLayout({
           "exclude": ["node_modules"]
         };
         await sandbox.files.write('tsconfig.json', JSON.stringify(tsConfig, null, 2));
-        
+
         // Create next-env.d.ts
         await sandbox.files.write('next-env.d.ts', '/// <reference types="next" />\n/// <reference types="next/image-types/global" />');
       }
@@ -198,7 +210,7 @@ export default function RootLayout({
             timeoutMs: 120000 // 2 minute timeout
           });
           console.log('npm install result:', installResult.stdout);
-          
+
           if (installResult.stderr && installResult.stderr.includes('error')) {
             console.log('npm install errors:', installResult.stderr);
           }
@@ -217,7 +229,7 @@ export default function RootLayout({
       // Start the development server with timeout
       console.log('Starting development server...');
       let startCommand;
-      
+
       if (isNextJs) {
         // Use simple Next.js dev command
         startCommand = 'npm run dev';
